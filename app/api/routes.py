@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, BackgroundTasks, Header, HTTPException, status
 from typing import Optional
 from pydantic import BaseModel
+from app.limiter import limiter
+
 from app.auth.jwt import get_current_user, User, oauth2_scheme
 from app.database.db_manager import (
     get_client_data, get_account_balance,
@@ -36,6 +38,7 @@ async def get_optional_user(authorization: Optional[str] = Header(None)):
 
 
 @router.post("/secure-query", response_model=QueryResponse)
+@limiter.limit("5/minute")
 async def secure_query(
     request: QueryRequest,
     current_user: Optional[User] = Depends(get_optional_user)
